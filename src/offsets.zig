@@ -234,7 +234,7 @@ fn identifierIndexToLoc(tree: Ast, source_index: usize) Loc {
 }
 
 pub fn identifierIndexToNameLoc(text: [:0]const u8, source_index: usize) Loc {
-    if (text[source_index] == '@') {
+    if (text[source_index] == '@' and text[source_index + 1] == '\"') {
         std.debug.assert(text[source_index + 1] == '\"');
         const start_index = source_index + 2;
         var index: usize = start_index;
@@ -274,13 +274,14 @@ pub fn identifierIndexToNameSlice(text: [:0]const u8, source_index: usize) []con
     return locToSlice(text, identifierIndexToNameLoc(text, source_index));
 }
 
-pub fn identifierTokenToNameLoc(tree: Ast, identifier_token: Ast.TokenIndex) Loc {
-    std.debug.assert(tree.tokens.items(.tag)[identifier_token] == .identifier);
-    return identifierIndexToNameLoc(tree.source, tree.tokens.items(.start)[identifier_token]);
+pub fn identifierTokenToNameLoc(tree: Ast, identifier_token: Ast.TokenIndex) ?Loc {
+    if (tree.tokens.items(.tag)[identifier_token] == .identifier) {
+        return identifierIndexToNameLoc(tree.source, tree.tokens.items(.start)[identifier_token]);
+    } else return null;
 }
 
-pub fn identifierTokenToNameSlice(tree: Ast, identifier_token: Ast.TokenIndex) []const u8 {
-    return locToSlice(tree.source, identifierTokenToNameLoc(tree, identifier_token));
+pub fn identifierTokenToNameSlice(tree: Ast, identifier_token: Ast.TokenIndex) ?[]const u8 {
+    return locToSlice(tree.source, identifierTokenToNameLoc(tree, identifier_token) orelse return null);
 }
 
 pub fn tokenToIndex(tree: Ast, token_index: Ast.TokenIndex) usize {

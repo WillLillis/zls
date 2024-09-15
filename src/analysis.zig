@@ -681,7 +681,7 @@ fn resolveVarDeclAliasInternal(analyser: *Analyser, node_handle: NodeWithHandle,
     const resolved = switch (node_tags[node_handle.node]) {
         .identifier => blk: {
             const name_token = ast.identifierTokenFromIdentifierNode(tree, node_handle.node) orelse break :blk null;
-            const name = offsets.identifierTokenToNameSlice(tree, name_token);
+            const name = offsets.identifierTokenToNameSlice(tree, name_token) orelse return null;
             break :blk try analyser.lookupSymbolGlobal(
                 handle,
                 name,
@@ -699,7 +699,7 @@ fn resolveVarDeclAliasInternal(analyser: *Analyser, node_handle: NodeWithHandle,
                 else => return null,
             };
 
-            const symbol_name = offsets.identifierTokenToNameSlice(tree, datas[node_handle.node].rhs);
+            const symbol_name = offsets.identifierTokenToNameSlice(tree, datas[node_handle.node].rhs) orelse return null;
 
             break :blk try analyser.lookupSymbolContainer(
                 resolved_scope_handle,
@@ -1405,7 +1405,7 @@ fn resolveTypeOfNodeUncached(analyser: *Analyser, node_handle: NodeWithHandle) e
         },
         .identifier => {
             const name_token = ast.identifierTokenFromIdentifierNode(tree, node) orelse return null;
-            const name = offsets.identifierTokenToNameSlice(tree, name_token);
+            const name = offsets.identifierTokenToNameSlice(tree, name_token) orelse return null;
 
             const is_escaped_identifier = tree.source[tree.tokens.items(.start)[name_token]] == '@';
             if (!is_escaped_identifier) {
@@ -1556,7 +1556,7 @@ fn resolveTypeOfNodeUncached(analyser: *Analyser, node_handle: NodeWithHandle) e
                 .handle = handle,
             })) orelse return null;
 
-            const symbol = offsets.identifierTokenToNameSlice(tree, datas[node_handle.node].rhs);
+            const symbol = offsets.identifierTokenToNameSlice(tree, datas[node_handle.node].rhs) orelse return null;
 
             return try resolveFieldAccess(analyser, lhs, symbol);
         },
@@ -1900,9 +1900,9 @@ fn resolveTypeOfNodeUncached(analyser: *Analyser, node_handle: NodeWithHandle) e
             // HACK: resolve std.ArrayList(T).Slice
             if (std.mem.endsWith(u8, node_handle.handle.uri, "array_list.zig") and
                 if_node.payload_token != null and
-                std.mem.eql(u8, offsets.identifierTokenToNameSlice(tree, if_node.payload_token.?), "a") and
+                std.mem.eql(u8, offsets.identifierTokenToNameSlice(tree, if_node.payload_token.?) orelse return null, "a") and
                 node_tags[if_node.ast.cond_expr] == .identifier and
-                std.mem.eql(u8, offsets.identifierTokenToNameSlice(tree, main_tokens[if_node.ast.cond_expr]), "alignment"))
+                std.mem.eql(u8, offsets.identifierTokenToNameSlice(tree, main_tokens[if_node.ast.cond_expr]) orelse return null, "alignment"))
             blk: {
                 return (try analyser.resolveTypeOfNodeInternal(.{ .handle = handle, .node = if_node.ast.then_expr })) orelse break :blk;
             }
@@ -2108,7 +2108,7 @@ fn resolveTypeOfNodeUncached(analyser: *Analyser, node_handle: NodeWithHandle) e
         },
         .error_value => {
             if (token_tags[datas[node].rhs] != .identifier) return null;
-            const name = offsets.identifierTokenToNameSlice(tree, datas[node].rhs);
+            const name = offsets.identifierTokenToNameSlice(tree, datas[node].rhs) orelse return null;
             const name_index = try analyser.ip.string_pool.getOrPutString(analyser.gpa, name);
 
             const error_set_type = try analyser.ip.get(analyser.gpa, .{ .error_set_type = .{

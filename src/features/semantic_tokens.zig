@@ -854,7 +854,7 @@ fn writeNodeTokens(builder: *Builder, node: Ast.Node.Index) error{OutOfMemory}!v
             const data = node_data[node];
             if (data.rhs == 0) return;
 
-            const symbol_name = offsets.identifierTokenToNameSlice(tree, data.rhs);
+            const symbol_name = offsets.identifierTokenToNameSlice(tree, data.rhs) orelse return;
 
             try writeNodeTokens(builder, data.lhs);
 
@@ -994,7 +994,7 @@ fn writeIdentifier(builder: *Builder, name_token: Ast.Node.Index) error{OutOfMem
     const handle = builder.handle;
     const tree = handle.tree;
 
-    const name = offsets.identifierTokenToNameSlice(tree, name_token);
+    const name = offsets.identifierTokenToNameSlice(tree, name_token) orelse return;
     const is_escaped_identifier = tree.source[tree.tokens.items(.start)[name_token]] == '@';
 
     if (!is_escaped_identifier) {

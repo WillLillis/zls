@@ -33,13 +33,13 @@ pub const IdentifierTokenContext = struct {
     pub fn eql(self: @This(), a: Ast.TokenIndex, b: Ast.TokenIndex, b_index: usize) bool {
         _ = b_index;
         if (a == b) return true;
-        const a_name = offsets.identifierTokenToNameSlice(self.tree, a);
-        const b_name = offsets.identifierTokenToNameSlice(self.tree, b);
+        const a_name = offsets.identifierTokenToNameSlice(self.tree, a) orelse return false;
+        const b_name = offsets.identifierTokenToNameSlice(self.tree, b) orelse return false;
         return std.mem.eql(u8, a_name, b_name);
     }
 
     pub fn hash(self: @This(), token: Ast.TokenIndex) u32 {
-        const name = offsets.identifierTokenToNameSlice(self.tree, token);
+        const name = offsets.identifierTokenToNameSlice(self.tree, token).?;
         return std.array_hash_map.hashString(name);
     }
 };
@@ -391,7 +391,7 @@ const ScopeContext = struct {
             kind: DeclarationLookup.Kind,
         ) error{OutOfMemory}!void {
             std.debug.assert((declaration == .label) == (kind == .label));
-            const name = offsets.identifierTokenToNameSlice(pushed.context.tree, identifier_token);
+            const name = offsets.identifierTokenToNameSlice(pushed.context.tree, identifier_token) orelse return;
             if (std.mem.eql(u8, name, "_")) return;
             defer std.debug.assert(pushed.context.doc_scope.declarations.len == pushed.context.doc_scope.declaration_lookup_map.count());
 
@@ -866,7 +866,7 @@ noinline fn walkContainerDecl(
                 try scope.pushDeclaration(main_token, .{ .ast_node = decl }, .field);
 
                 if (is_enum_or_tagged_union) {
-                    const name = offsets.identifierTokenToNameSlice(tree, main_token);
+                    const name = offsets.identifierTokenToNameSlice(tree, main_token) orelse return;
                     if (std.mem.eql(u8, name, "_")) continue;
 
                     const gop = try context.doc_scope.global_enum_set.getOrPutContext(

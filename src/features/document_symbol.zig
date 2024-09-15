@@ -42,11 +42,14 @@ fn callback(ctx: *Context, tree: Ast, node: Ast.Node.Index) error{OutOfMemory}!v
         .simple_var_decl,
         .aligned_var_decl,
         => blk: {
+            std.log.info("THIS ONE FOR SURE", .{});
             if (!ast.isContainer(tree, ctx.parent_node)) break :blk null;
 
             const var_decl = tree.fullVarDecl(node).?;
             const var_decl_name_token = var_decl.ast.mut_token + 1;
-            const var_decl_name = offsets.identifierTokenToNameSlice(tree, var_decl_name_token);
+            const var_decl_name = offsets.identifierTokenToNameSlice(tree, var_decl_name_token) orelse return;
+            
+            std.log.info("FOR WILL: {s}", .{var_decl_name});
 
             new_ctx.last_var_decl_name = var_decl_name;
 
@@ -84,7 +87,7 @@ fn callback(ctx: *Context, tree: Ast, node: Ast.Node.Index) error{OutOfMemory}!v
             const name_token = fn_info.name_token orelse break :blk null;
 
             break :blk .{
-                .name = offsets.identifierTokenToNameSlice(tree, name_token),
+                .name = offsets.identifierTokenToNameSlice(tree, name_token) orelse break :blk null,
                 .detail = analysis.getFunctionSignature(tree, fn_info),
                 .kind = .Function,
                 .loc = offsets.nodeToLoc(tree, node),

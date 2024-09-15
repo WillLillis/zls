@@ -1137,7 +1137,7 @@ pub fn testDeclNameAndToken(tree: Ast, test_decl_node: Ast.Node.Index) ?struct {
             const name = offsets.tokenToSlice(tree, test_name_token);
             return .{ test_name_token, name[1 .. name.len - 1] };
         },
-        .identifier => return .{ test_name_token, offsets.identifierTokenToNameSlice(tree, test_name_token) },
+        .identifier => return .{ test_name_token, offsets.identifierTokenToNameSlice(tree, test_name_token) orelse return null },
         else => return null,
     }
 }

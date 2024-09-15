@@ -987,7 +987,7 @@ fn globalSetCompletions(builder: *Builder, kind: enum { error_set, enum_set }) e
         };
         try result_set.ensureUnusedCapacity(builder.arena, curr_set.count());
         for (curr_set.keys()) |identifier_token| {
-            const name = offsets.identifierTokenToNameSlice(dependency_handle.tree, identifier_token);
+            const name = offsets.identifierTokenToNameSlice(dependency_handle.tree, identifier_token) orelse continue;
 
             const gop = result_set.getOrPutAssumeCapacityAdapted(
                 name,

@@ -248,7 +248,7 @@ fn writeCallHint(
     const min_len = @min(parameters.len, arguments.len);
     for (parameters[0..min_len], arguments[0..min_len]) |param, arg| {
         const parameter_name_token = param.name_token orelse continue;
-        const parameter_name = offsets.identifierTokenToNameSlice(fn_node.handle.tree, parameter_name_token);
+        const parameter_name = offsets.identifierTokenToNameSlice(fn_node.handle.tree, parameter_name_token) orelse continue;
 
         if (builder.config.inlay_hints_hide_redundant_param_names or builder.config.inlay_hints_hide_redundant_param_names_last_token) dont_skip: {
             const arg_token = if (builder.config.inlay_hints_hide_redundant_param_names_last_token)
@@ -259,7 +259,7 @@ fn writeCallHint(
                 unreachable;
 
             if (tree.tokens.items(.tag)[arg_token] != .identifier) break :dont_skip;
-            const arg_token_name = offsets.identifierTokenToNameSlice(tree, arg_token);
+            const arg_token_name = offsets.identifierTokenToNameSlice(tree, arg_token) orelse continue;
             if (!std.mem.eql(u8, parameter_name, arg_token_name)) break :dont_skip;
 
             continue;
