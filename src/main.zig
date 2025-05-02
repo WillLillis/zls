@@ -341,6 +341,7 @@ pub fn main() !u8 {
 
     const server = try zls.Server.create(allocator);
     defer server.destroy();
+    defer if (log_file_path) |path| if (server.status == .exiting_success) std.fs.deleteFileAbsolute(path) catch {};
     server.setTransport(transport.any());
     server.config_path = result.config_path;
 
